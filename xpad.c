@@ -425,7 +425,11 @@ static void xpad_set_up_rel(struct input_dev *input_dev, signed short abs)
 int key_need_register[] =
 {
     KEY_LEFT, KEY_RIGHT, KEY_UP, KEY_DOWN, KEY_LEFTALT, KEY_RIGHTALT, KEY_TAB, KEY_ENTER, KEY_F7, BTN_START, BTN_BACK,BTN_TR, BTN_TR2,BTN_TL,BTN_TL2,
-    BTN_SELECT,-1
+    BTN_SELECT,KEY_1,KEY_2,KEY_3,KEY_4,KEY_5,KEY_6,KEY_7,KEY_8,KEY_9,KEY_0,
+    KEY_A, KEY_B, KEY_C, KEY_D, KEY_E, KEY_F, KEY_G, KEY_H, KEY_I, KEY_J, KEY_K, KEY_L, KEY_M, KEY_N, KEY_O,
+    KEY_P, KEY_Q, KEY_R, KEY_S, KEY_T, KEY_U, KEY_V, KEY_W, KEY_X, KEY_Y, KEY_Z,
+    KEY_EQUAL, KEY_MINUS, KEY_BACKSPACE, KEY_LEFTBRACE, KEY_RIGHTBRACE, KEY_SEMICOLON, KEY_APOSTROPHE, KEY_COMMA, KEY_DOT, KEY_SLASH,
+    -1
 };
 
 static int xpad_probe(struct usb_interface *intf, const struct usb_device_id *id)
