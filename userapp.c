@@ -7,6 +7,7 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <memory.h>
+#include "pipe.h"
 #define SENSETIVE 3
 #define FRESTIME 1000
 #define REPTIME 10000
@@ -22,7 +23,7 @@
 
 struct input_event  tmpevent;
 
-pthread_t theadingreadfromxbox, threadingwheel , theadingreadcmd;
+pthread_t theadingreadfromxbox, threadingwheel , theadingreadcmd, theadingcheckwindow;
 
 int fpxbox, fpdevlist;// fpkeyboard, fpmouse;
 
@@ -232,7 +233,7 @@ void *TheadingReadandProsKeyfromXboxFunc( void *arg)
             btn_state[EV_KEY][BTN_START] = 0;
         }
         end_fg = CheckEnd();
-        printf("fpxbox:%d type: %d code:%d value:%d\n", fpxbox, tmpevent.type, tmpevent.code, tmpevent.value);
+        //printf("fpxbox:%d type: %d code:%d value:%d\n", fpxbox, tmpevent.type, tmpevent.code, tmpevent.value);
     }
     return NULL;
 }
@@ -324,6 +325,8 @@ int main()
 
     pthread_create(&theadingreadcmd, NULL, TheadingReadCmdFunc, "Processing Read from Console...");
 
+    pthread_create(&theadingcheckwindow, NULL, TheadingCheckWindowFunc, "Processing Check Window...");
+
     /*if (){
         pthread_cancel(pthx);
     }*/
@@ -338,6 +341,9 @@ int main()
 
     pthread_cancel(theadingreadcmd);
     pthread_join(theadingreadcmd, NULL);
+
+     pthread_cancel(theadingcheckwindow);
+    pthread_join(theadingcheckwindow, NULL);
 
     close(fpxbox);
     close(fpdevlist);

@@ -1,0 +1,5 @@
+gnome-terminal
+sublime_text
+Firefox
+chromium-browser
+nautilus
