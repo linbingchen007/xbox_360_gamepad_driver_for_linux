@@ -213,7 +213,7 @@ void SendComboKeys3(int key1, int key2, int key3, int fp)
     rtime = SendEvent(&curevent, EV_KEY, key1, 1, fp);
     SendReport(fp,rtime);
     usleep(500);
-    
+
     rtime = SendEvent(&curevent, EV_KEY, key2, 1, fp);
     SendReport(fp,rtime);
     usleep(500);
@@ -410,33 +410,51 @@ void *TheadingReadandProsKeyfromXboxFunc( void *arg)
             if (!pressedDLeftandRight_fg)
             {
                 //alt + tab  and hold alt
-                rtime = SendEvent(&switchwevent, EV_KEY, KEY_LEFTALT, 1, fpxbox);
-                SendReport(fpxbox,rtime);
-                 rtime = SendEvent(&switchwevent, EV_KEY, KEY_TAB, 1, fpxbox);
-                SendReport(fpxbox,rtime);
-                 rtime = SendEvent(&switchwevent, EV_KEY, (tmpevent.code == BTN_DPAD_LEFT ? KEY_LEFT : KEY_RIGHT) , 1, fpxbox);
-                SendReport(fpxbox,rtime);
-                 rtime = SendEvent(&switchwevent, EV_KEY, (tmpevent.code == BTN_DPAD_LEFT ? KEY_LEFT : KEY_RIGHT) , 0, fpxbox);
-                SendReport(fpxbox,rtime);
-                rtime = SendEvent(&switchwevent, EV_KEY, KEY_TAB, 0, fpxbox);
-                SendReport(fpxbox,rtime);
+                rtime = SendEvent(&switchwevent, EV_KEY, KEY_LEFTALT, 1, fpkeyboard);
+                SendReport(fpkeyboard,rtime);
+                usleep(500);
+
+                 rtime = SendEvent(&switchwevent, EV_KEY, KEY_TAB, 1, fpkeyboard);
+                SendReport(fpkeyboard,rtime);
+                usleep(500);
+
+                 rtime = SendEvent(&switchwevent, EV_KEY, (tmpevent.code == BTN_DPAD_LEFT ? KEY_LEFT : KEY_RIGHT) , 1, fpkeyboard);
+                SendReport(fpkeyboard,rtime);
+                usleep(500);
+
+                 rtime = SendEvent(&switchwevent, EV_KEY, (tmpevent.code == BTN_DPAD_LEFT ? KEY_LEFT : KEY_RIGHT) , 0, fpkeyboard);
+                SendReport(fpkeyboard,rtime);
+                usleep(500);
+
+                rtime = SendEvent(&switchwevent, EV_KEY, KEY_TAB, 0, fpkeyboard);
+                SendReport(fpkeyboard,rtime);
+                usleep(500);
+
                 pressedDLeftandRight_fg = 1;
             }
             else
             {
                 if (tmpevent.code == BTN_DPAD_LEFT )
                 {
-                     rtime = SendEvent(&switchwevent, EV_KEY, KEY_LEFT , 1, fpxbox);
-                    SendReport(fpxbox,rtime);
-                     rtime = SendEvent(&switchwevent, EV_KEY, KEY_LEFT , 0, fpxbox);
-                    SendReport(fpxbox,rtime);
+                     rtime = SendEvent(&switchwevent, EV_KEY, KEY_LEFT , 1, fpkeyboard);
+                    SendReport(fpkeyboard,rtime);
+                    usleep(500);
+
+                     rtime = SendEvent(&switchwevent, EV_KEY, KEY_LEFT , 0, fpkeyboard);
+                    SendReport(fpkeyboard,rtime);
+                    usleep(500);
+
                 }
                 else if (tmpevent.code == BTN_DPAD_RIGHT )
                 {
-                     rtime = SendEvent(&switchwevent, EV_KEY, KEY_RIGHT , 1, fpxbox);
-                    SendReport(fpxbox,rtime);
-                     rtime = SendEvent(&switchwevent, EV_KEY, KEY_RIGHT , 0, fpxbox);
-                    SendReport(fpxbox,rtime);
+                     rtime = SendEvent(&switchwevent, EV_KEY, KEY_RIGHT , 1, fpkeyboard);
+                    SendReport(fpkeyboard,rtime);
+                    usleep(500);
+
+                     rtime = SendEvent(&switchwevent, EV_KEY, KEY_RIGHT , 0, fpkeyboard);
+                    SendReport(fpkeyboard,rtime);
+                    usleep(500);
+
                 }
 
             }
@@ -463,8 +481,10 @@ void *TheadingReadandProsKeyfromXboxFunc( void *arg)
                                                                      )  ) )
         {
             //puts("!!!!!!!!!!!!");
-             rtime = SendEvent(&switchwevent, EV_KEY, KEY_LEFTALT, 0, fpxbox);
-            SendReport(fpxbox,rtime);
+             rtime = SendEvent(&switchwevent, EV_KEY, KEY_LEFTALT, 0, fpkeyboard);
+            SendReport(fpkeyboard,rtime);
+            usleep(500);
+            
             pressedDLeftandRight_fg = 0;
         }
         end_fg = CheckEnd();
