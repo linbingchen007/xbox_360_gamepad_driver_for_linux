@@ -19,18 +19,17 @@
 #define PATTERNSIZE 50
 #define PATHSIZE 50
 #define MAXMACROSTRLEN 100
-#define MAXPROBLEKEYNUM 8
+#define MAXPROBLEKEYNUM 6
 
 struct input_event  tmpevent;
 
 pthread_t theadingreadfromxbox, threadingwheel , theadingreadcmd, theadingcheckwindow, theadingcoolkeyaccordingwindow;
 
-int fpxbox, fpdevlist,fpkeyboard;// fpkeyboard, fpmouse;
+int fpxbox, fpdevlist;// fpkeyboard, fpmouse;
 
 char devlistbuffer[MAXDEVLISTLEN];
 
 char xbox_devpath[PATHSIZE ] = "/dev/input/event";
-char keyboard_devpath[PATHSIZE ] = "/dev/input/event3";
 char devlist_path[PATHSIZE ] = "/proc/bus/input/devices";
 
 char devpattern[] = "Microsoft XBox 360 Super Mouse";
@@ -161,11 +160,11 @@ static inline int CheckReport(struct  input_event *curevent)
     return curevent->type == 0 && curevent->code == 0 && curevent->value == 0;
 }
 
-void SendReport(int fp, struct timeval rtime)
+void SendReport(int fp)
 {
     struct  input_event report_event;
     memset(&report_event, 0, sizeof(report_event));
-    report_event.time = rtime;
+    gettimeofday(&report_event.time, NULL);
     report_event.type = EV_SYN;
     report_event.code = SYN_REPORT ;
     report_event.value = 0;
@@ -182,7 +181,7 @@ static inline int CheckEvent(struct input_event *curevent , int type , int code 
 }
 
 
-struct timeval SendEvent(struct input_event *curevent, int type, int code, int value, int fp)
+void SendEvent(struct input_event *curevent, int type, int code, int value, int fp)
 {
     memset(curevent, 0, sizeof(curevent));
     gettimeofday(&curevent->time, NULL);
@@ -190,7 +189,6 @@ struct timeval SendEvent(struct input_event *curevent, int type, int code, int v
     curevent->code = code;
     curevent->value = value;
     write(fp, curevent, PACKETLEN);
-    return curevent->time;
 }
 
 
@@ -198,62 +196,40 @@ void SendKeyfromChar(char x, int fp)
 {
     struct input_event curevent;
     int keyid = keyid_table[x];
-    struct timeval rtime;
     //printf("keyid : %d\n", keyid);
-    rtime = SendEvent(&curevent, EV_KEY, keyid, 1, fp);
-    SendReport(fp,rtime);
-    rtime = SendEvent(&curevent, EV_KEY, keyid, 0, fp);
-    SendReport(fp,rtime);
+    SendEvent(&curevent, EV_KEY, keyid, 1, fp);
+    SendReport(fp);
+    SendEvent(&curevent, EV_KEY, keyid, 0, fp);
+    SendReport(fp);
 }
 
 void SendComboKeys3(int key1, int key2, int key3, int fp)
 {
     struct input_event curevent;
-    struct timeval rtime;
-    rtime = SendEvent(&curevent, EV_KEY, key1, 1, fp);
-    SendReport(fp,rtime);
-    usleep(500);
-    
-    rtime = SendEvent(&curevent, EV_KEY, key2, 1, fp);
-    SendReport(fp,rtime);
-    usleep(500);
-
-    rtime = SendEvent(&curevent, EV_KEY, key3, 1, fp);
-    SendReport(fp,rtime);
-    usleep(500);
-
-    rtime = SendEvent(&curevent, EV_KEY, key3, 0, fp);
-    SendReport(fp,rtime);
-    usleep(500);
-
-    rtime = SendEvent(&curevent, EV_KEY, key2, 0, fp);
-    SendReport(fp,rtime);
-    usleep(500);
-
-    rtime = SendEvent(&curevent, EV_KEY, key1, 0, fp);
-    SendReport(fp,rtime);
-    usleep(500);
+    SendEvent(&curevent, EV_KEY, key1, 1, fp);
+    SendReport(fp);
+    SendEvent(&curevent, EV_KEY, key2, 1, fp);
+    SendReport(fp);
+    SendEvent(&curevent, EV_KEY, key3, 1, fp);
+    SendReport(fp);
+    SendEvent(&curevent, EV_KEY, key3, 0, fp);
+    SendReport(fp);
+    SendEvent(&curevent, EV_KEY, key2, 0, fp);
+    SendReport(fp);
+    SendEvent(&curevent, EV_KEY, key1, 0, fp);
+    SendReport(fp);
 }
 void SendComboKeys2(int key1, int key2, int fp)
 {
-    struct timeval rtime;
     struct input_event curevent;
-
-    rtime = SendEvent(&curevent, EV_KEY, key1, 1, fp);
-    SendReport(fp,rtime);
-    usleep(500);
-  
-    rtime = SendEvent(&curevent, EV_KEY, key2, 1, fp);
-    SendReport(fp,rtime);
-    usleep(500);
-  
-    rtime = SendEvent(&curevent, EV_KEY, key2, 0, fp);
-    SendReport(fp,rtime);
-    usleep(500);
-   
-    rtime = SendEvent(&curevent, EV_KEY, key1, 0, fp);
-    SendReport(fp,rtime);
-    usleep(500);
+    SendEvent(&curevent, EV_KEY, key1, 1, fp);
+    SendReport(fp);
+    SendEvent(&curevent, EV_KEY, key2, 1, fp);
+    SendReport(fp);
+    SendEvent(&curevent, EV_KEY, key2, 0, fp);
+    SendReport(fp);
+    SendEvent(&curevent, EV_KEY, key1, 0, fp);
+    SendReport(fp);
 
 }
 char window_name[MAXWINDOWNUM][50] =
@@ -265,15 +241,15 @@ char window_name[MAXWINDOWNUM][50] =
     "nautilus"
 };
 int ComboKey_Table[MAXWINDOWNUM] [MAXPROBLEKEYNUM] [4] =
-{//gnome terminal
+{
     {
         {2, KEY_LEFTCTRL, KEY_PAGEUP},
         {2, KEY_LEFTCTRL, KEY_PAGEDOWN},
         {3, KEY_LEFTSHIFT, KEY_LEFTCTRL, KEY_W},
         {3, KEY_LEFTSHIFT, KEY_LEFTCTRL, KEY_T},
         {3, KEY_LEFTSHIFT, KEY_LEFTCTRL, KEY_N},
-        {3, KEY_LEFTSHIFT, KEY_LEFTCTRL, KEY_Q},
-    },//sublime_text
+        {3, KEY_LEFTSHIFT, KEY_LEFTCTRL, KEY_Q}
+    },
     {
         {2, KEY_LEFTCTRL, KEY_PAGEUP},
         {2, KEY_LEFTCTRL, KEY_PAGEDOWN},
@@ -281,26 +257,22 @@ int ComboKey_Table[MAXWINDOWNUM] [MAXPROBLEKEYNUM] [4] =
         {2, KEY_LEFTCTRL, KEY_N},
         {3, KEY_LEFTSHIFT, KEY_LEFTCTRL, KEY_N},
         {3, KEY_LEFTSHIFT, KEY_LEFTCTRL, KEY_W}
-    }, //Firefox
+    },
     {
         {2, KEY_LEFTCTRL, KEY_PAGEUP},
         {2, KEY_LEFTCTRL, KEY_PAGEDOWN},
         {2, KEY_LEFTCTRL, KEY_W},
         {2, KEY_LEFTCTRL, KEY_T},
         {2, KEY_LEFTCTRL, KEY_N},
-        {3, KEY_LEFTSHIFT, KEY_LEFTCTRL, KEY_W},
-        {2,KEY_LEFTALT,KEY_LEFT},
-        {2,KEY_LEFTALT,KEY_RIGHT}
-    },   //Chromium
+        {3, KEY_LEFTSHIFT, KEY_LEFTCTRL, KEY_W}
+    },
     {
         {2, KEY_LEFTCTRL, KEY_PAGEUP},
         {2, KEY_LEFTCTRL, KEY_PAGEDOWN},
         {2, KEY_LEFTCTRL, KEY_W},
         {2, KEY_LEFTCTRL, KEY_T},
         {2, KEY_LEFTCTRL, KEY_N},
-        {3, KEY_LEFTSHIFT, KEY_LEFTCTRL, KEY_W},
-        {2,KEY_LEFTALT,KEY_LEFT},
-        {2,KEY_LEFTALT,KEY_RIGHT}
+        {3, KEY_LEFTSHIFT, KEY_LEFTCTRL, KEY_W}
     },
     {
         {2, KEY_LEFTCTRL, KEY_PAGEUP},
@@ -318,9 +290,7 @@ int ComboKey_XBtnType[MAXPROBLEKEYNUM][2] =
     {EV_KEY, BTN_TL2},
     {EV_KEY, BTN_TR2},
     {EV_KEY, BTN_Y},
-    {EV_KEY, BTN_B},
-    {EV_KEY,BTN_SELECT},
-    {EV_KEY,BTN_START}
+    {EV_KEY, BTN_B}
 };
 void CheckandSendfromWindowId(int wid, int fp)
 {
@@ -329,7 +299,6 @@ void CheckandSendfromWindowId(int wid, int fp)
     {
         if (CheckBtnState(ComboKey_XBtnType[i][0], ComboKey_XBtnType[i][1]))
         {
-            printf("%d\n",i);
             if (ComboKey_Table[wid][i][0] == 2)
             {
                 SendComboKeys2(ComboKey_Table[wid][i][1], ComboKey_Table[wid][i][2], fp);
@@ -366,7 +335,6 @@ void *TheadingReadandProsKeyfromXboxFunc( void *arg)
 {
     int end_fg = 0, i, creatWheelThread_fg = 0, pressedDLeftandRight_fg = 0;
     struct  input_event switchwevent;
-    struct timeval rtime;
     //printf("yeh1!!!\n");
     while (1)
     {
@@ -381,7 +349,6 @@ void *TheadingReadandProsKeyfromXboxFunc( void *arg)
         //{
         //if (SendReport(end_fg)) return NULL;
         // }
-        /*
         if (CheckBtnState(EV_KEY, BTN_SELECT))
         {
             puts("btn_back");
@@ -396,8 +363,7 @@ void *TheadingReadandProsKeyfromXboxFunc( void *arg)
             for (i = 0; btnstart_macrostr[i]; i++) SendKeyfromChar(btnstart_macrostr[i], fpxbox);
             btn_state[EV_KEY][BTN_START] = 0;
         }
-        else */
-        if (CheckBtnState(EV_ABS, ABS_RY))
+        else if (CheckBtnState(EV_ABS, ABS_RY))
         {
             if (!creatWheelThread_fg)
             {
@@ -410,33 +376,33 @@ void *TheadingReadandProsKeyfromXboxFunc( void *arg)
             if (!pressedDLeftandRight_fg)
             {
                 //alt + tab  and hold alt
-                rtime = SendEvent(&switchwevent, EV_KEY, KEY_LEFTALT, 1, fpxbox);
-                SendReport(fpxbox,rtime);
-                 rtime = SendEvent(&switchwevent, EV_KEY, KEY_TAB, 1, fpxbox);
-                SendReport(fpxbox,rtime);
-                 rtime = SendEvent(&switchwevent, EV_KEY, (tmpevent.code == BTN_DPAD_LEFT ? KEY_LEFT : KEY_RIGHT) , 1, fpxbox);
-                SendReport(fpxbox,rtime);
-                 rtime = SendEvent(&switchwevent, EV_KEY, (tmpevent.code == BTN_DPAD_LEFT ? KEY_LEFT : KEY_RIGHT) , 0, fpxbox);
-                SendReport(fpxbox,rtime);
-                rtime = SendEvent(&switchwevent, EV_KEY, KEY_TAB, 0, fpxbox);
-                SendReport(fpxbox,rtime);
+                SendEvent(&switchwevent, EV_KEY, KEY_LEFTALT, 1, fpxbox);
+                SendReport(fpxbox);
+                SendEvent(&switchwevent, EV_KEY, KEY_TAB, 1, fpxbox);
+                SendReport(fpxbox);
+                SendEvent(&switchwevent, EV_KEY, (tmpevent.code == BTN_DPAD_LEFT ? KEY_LEFT : KEY_RIGHT) , 1, fpxbox);
+                SendReport(fpxbox);
+                SendEvent(&switchwevent, EV_KEY, (tmpevent.code == BTN_DPAD_LEFT ? KEY_LEFT : KEY_RIGHT) , 0, fpxbox);
+                SendReport(fpxbox);
+                SendEvent(&switchwevent, EV_KEY, KEY_TAB, 0, fpxbox);
+                SendReport(fpxbox);
                 pressedDLeftandRight_fg = 1;
             }
             else
             {
                 if (tmpevent.code == BTN_DPAD_LEFT )
                 {
-                     rtime = SendEvent(&switchwevent, EV_KEY, KEY_LEFT , 1, fpxbox);
-                    SendReport(fpxbox,rtime);
-                     rtime = SendEvent(&switchwevent, EV_KEY, KEY_LEFT , 0, fpxbox);
-                    SendReport(fpxbox,rtime);
+                    SendEvent(&switchwevent, EV_KEY, KEY_LEFT , 1, fpxbox);
+                    SendReport(fpxbox);
+                    SendEvent(&switchwevent, EV_KEY, KEY_LEFT , 0, fpxbox);
+                    SendReport(fpxbox);
                 }
                 else if (tmpevent.code == BTN_DPAD_RIGHT )
                 {
-                     rtime = SendEvent(&switchwevent, EV_KEY, KEY_RIGHT , 1, fpxbox);
-                    SendReport(fpxbox,rtime);
-                     rtime = SendEvent(&switchwevent, EV_KEY, KEY_RIGHT , 0, fpxbox);
-                    SendReport(fpxbox,rtime);
+                    SendEvent(&switchwevent, EV_KEY, KEY_RIGHT , 1, fpxbox);
+                    SendReport(fpxbox);
+                    SendEvent(&switchwevent, EV_KEY, KEY_RIGHT , 0, fpxbox);
+                    SendReport(fpxbox);
                 }
 
             }
@@ -450,7 +416,7 @@ void *TheadingReadandProsKeyfromXboxFunc( void *arg)
                 pthread_join(threadingwheel, NULL);
                 creatWheelThread_fg = 0;
             }
-            PerformCoolKeyAcrdWindow(fpkeyboard);
+            PerformCoolKeyAcrdWindow(fpxbox);
         }
 
         if   (pressedDLeftandRight_fg && (tmpevent.type == EV_ABS || (tmpevent.code == KEY_UP  || tmpevent.code == KEY_DOWN ||
@@ -462,14 +428,13 @@ void *TheadingReadandProsKeyfromXboxFunc( void *arg)
                                           tmpevent.code == BTN_MODE
                                                                      )  ) )
         {
-            //puts("!!!!!!!!!!!!");
-             rtime = SendEvent(&switchwevent, EV_KEY, KEY_LEFTALT, 0, fpxbox);
-            SendReport(fpxbox,rtime);
+            puts("!!!!!!!!!!!!");
+            SendEvent(&switchwevent, EV_KEY, KEY_LEFTALT, 0, fpxbox);
+            SendReport(fpxbox);
             pressedDLeftandRight_fg = 0;
         }
         end_fg = CheckEnd();
-        printf("fpxbox:%d type: %d code:%d value:%d\n", fpxbox, tmpevent.type, tmpevent.code, tmpevent.value);
-        //usleep(10000);
+        //printf("fpxbox:%d type: %d code:%d value:%d\n", fpxbox, tmpevent.type, tmpevent.code, tmpevent.value);
     }
     return NULL;
 }
@@ -521,7 +486,6 @@ void *TheadingReadCmdFunc(void *arg)
 void *TheadingWheelFunc( void *arg)
 {
     struct input_event newevent;
-    struct timeval rtime;
     //printf("yeh2!!!\n");
     while (1)
     {
@@ -532,8 +496,8 @@ void *TheadingWheelFunc( void *arg)
         {
             //printf("yehtl!!! %d\n", tmpevent.value);
             //fflush(stdout);
-             rtime = SendEvent(&newevent, EV_REL, REL_WHEEL, btn_state[EV_ABS][ABS_RY] > 0 ? 1 : (btn_state[EV_ABS][ABS_RY] < 0 ? -1 : 0), fpxbox);
-            SendReport(fpxbox, rtime );
+            SendEvent(&newevent, EV_REL, REL_WHEEL, btn_state[EV_ABS][ABS_RY] > 0 ? 1 : (btn_state[EV_ABS][ABS_RY] < 0 ? -1 : 0), fpxbox);
+            SendReport(fpxbox);
         }
 
     }
@@ -553,7 +517,7 @@ int main()
     //printf("read finished!!\n");
     CompleteXboxDevPath(devlistbuffer, xbox_devpath);
     fpxbox = open(xbox_devpath, O_RDWR);
-    fpkeyboard = open(keyboard_devpath,O_RDWR);
+
     //pthread_create(&threadingwheel, NULL, TheadingWheelFunc, "Processing Wheel ");
 
     pthread_create(&theadingreadcmd, NULL, TheadingReadCmdFunc, "Processing Read from Console...");

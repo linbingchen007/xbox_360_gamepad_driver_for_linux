@@ -9,7 +9,7 @@
 #include <memory.h>
 #define MAXBUFFERLEN 300
 char buf[MAXBUFFERLEN];
-int main(){
+void *TheadingCheckWindow(){
 	while(1){
 	usleep(200000);
 	FILE * fp = popen("xprop -id $(xprop -root 32x '\t$0' _NET_ACTIVE_WINDOW | cut -f 2) WM_CLASS","r");

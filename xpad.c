@@ -155,8 +155,8 @@ static void xpad360_process_packet(struct usb_xpad *xpad,
 
     /* digital pad */
     /* dpad as buttons (left, right, up, down) */
-    input_report_key(dev, KEY_LEFT, data[2] & 0x04);
-    input_report_key(dev, KEY_RIGHT, data[2] & 0x08);
+    input_report_key(dev, BTN_DPAD_LEFT, data[2] & 0x04);
+    input_report_key(dev, BTN_DPAD_RIGHT, data[2] & 0x08);
     input_report_key(dev, KEY_UP, data[2] & 0x01);
     input_report_key(dev, KEY_DOWN, data[2] & 0x02);
 
@@ -165,13 +165,12 @@ static void xpad360_process_packet(struct usb_xpad *xpad,
     input_report_key(dev, BTN_SELECT, data[2] & 0x20);
 
     /* stick press left/right */
-    input_report_key(dev, KEY_TAB, data[2] & 0x40);
+    input_report_key(dev, BTN_THUMBL, data[2] & 0x40);
 
     input_report_key(dev, KEY_ENTER, data[2] & 0x80);
 
     /* buttons A,B,X,Y,TL,TR and MODE */
     input_report_key(dev, BTN_RIGHT, data[3] & 0x10);
-
 
     input_report_key(dev, BTN_B,   data[3] & 0x20);
 
@@ -429,6 +428,8 @@ int key_need_register[] =
     KEY_A, KEY_B, KEY_C, KEY_D, KEY_E, KEY_F, KEY_G, KEY_H, KEY_I, KEY_J, KEY_K, KEY_L, KEY_M, KEY_N, KEY_O,
     KEY_P, KEY_Q, KEY_R, KEY_S, KEY_T, KEY_U, KEY_V, KEY_W, KEY_X, KEY_Y, KEY_Z,
     KEY_EQUAL, KEY_MINUS, KEY_BACKSPACE, KEY_LEFTBRACE, KEY_RIGHTBRACE, KEY_SEMICOLON, KEY_APOSTROPHE, KEY_COMMA, KEY_DOT, KEY_SLASH,
+    KEY_LEFTSHIFT,KEY_RIGHTSHIFT,KEY_LEFTCTRL,KEY_RIGHTCTRL,KEY_PAGEUP,KEY_PAGEDOWN,
+    BTN_DPAD_LEFT,BTN_DPAD_RIGHT,KEY_F4,
     -1
 };
 

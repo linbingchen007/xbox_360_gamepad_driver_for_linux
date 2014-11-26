@@ -17,7 +17,7 @@ void *TheadingCheckWindowFunc()
         FILE *fp = popen("xprop -id $(xprop -root 32x '\t$0' _NET_ACTIVE_WINDOW | cut -f 2) WM_CLASS", "r");
         fgets(PipeBuf, sizeof(PipeBuf), fp);
 
-        //puts(PipeBuf);
+        puts(PipeBuf);
         pclose(fp);
     }
     return 0;
