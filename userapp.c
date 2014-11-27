@@ -30,10 +30,11 @@ int fpxbox, fpdevlist,fpkeyboard;// fpkeyboard, fpmouse;
 char devlistbuffer[MAXDEVLISTLEN];
 
 char xbox_devpath[PATHSIZE ] = "/dev/input/event";
-char keyboard_devpath[PATHSIZE ] = "/dev/input/event3";
+char keyboard_devpath[PATHSIZE ] = "/dev/input/event";
 char devlist_path[PATHSIZE ] = "/proc/bus/input/devices";
 
-char devpattern[] = "Microsoft XBox 360 Super Mouse";
+char xbox_devpattern[] = "Microsoft XBox 360 Super Mouse";
+char keyboard_devpattern[]="keyboard";
 char eventpattern[] = "event";
 
 char eventidstr[10] ;
@@ -137,18 +138,28 @@ void AddEventIdStrtoPath(char *primdevpath, char *eventidstr)
     }
     primdevpath[i + len] = 0;
 }
-
+/*
 void CompleteXboxDevPath(char *devlistbuffer, char *xbox_devpath)
 {
     int st, i;
+    memset(eventidstr , 0 , sizeof(eventidstr));
+    prekmp(xbox_devpattern, next);
+    st = kmp(devlistbuffer, xbox_devpattern , next);
+    prekmp(eventpattern, next);
+    st += kmp(&devlistbuffer[st], eventpattern , next);
+    GetEventIdStr(&devlistbuffer[st], eventidstr);
+    AddEventIdStrtoPath(xbox_devpath, eventidstr);
+    //printf("%s\n", xbox_devpath);
+} */
+void CompleteDevPath(char *devlistbuffer,char *raw_devpath,char *devpattern){
+     int st, i;
     memset(eventidstr , 0 , sizeof(eventidstr));
     prekmp(devpattern, next);
     st = kmp(devlistbuffer, devpattern , next);
     prekmp(eventpattern, next);
     st += kmp(&devlistbuffer[st], eventpattern , next);
     GetEventIdStr(&devlistbuffer[st], eventidstr);
-    AddEventIdStrtoPath(xbox_devpath, eventidstr);
-    //printf("%s\n", xbox_devpath);
+    AddEventIdStrtoPath(raw_devpath, eventidstr);
 }
 
 int CheckEnd()
@@ -484,7 +495,6 @@ void *TheadingReadandProsKeyfromXboxFunc( void *arg)
              rtime = SendEvent(&switchwevent, EV_KEY, KEY_LEFTALT, 0, fpkeyboard);
             SendReport(fpkeyboard,rtime);
             usleep(500);
-            
             pressedDLeftandRight_fg = 0;
         }
         end_fg = CheckEnd();
@@ -571,8 +581,9 @@ int main()
     read(fpdevlist, &devlistbuffer, sizeof(devlistbuffer) - 1);
     //printf("%s\n", devlistbuffer);
     //printf("read finished!!\n");
-    CompleteXboxDevPath(devlistbuffer, xbox_devpath);
+    CompleteDevPath(devlistbuffer, xbox_devpath,xbox_devpattern);
     fpxbox = open(xbox_devpath, O_RDWR);
+    CompleteDevPath(devlistbuffer,keyboard_devpath,keyboard_devpattern);
     fpkeyboard = open(keyboard_devpath,O_RDWR);
     //pthread_create(&threadingwheel, NULL, TheadingWheelFunc, "Processing Wheel ");
 
