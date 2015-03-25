@@ -29,13 +29,13 @@ int fpxbox, fpdevlist,fpkeyboard;// fpkeyboard, fpmouse;
 
 char devlistbuffer[MAXDEVLISTLEN];
 
-char xbox_devpath[PATHSIZE ] = "/dev/input/event";
-char keyboard_devpath[PATHSIZE ] = "/dev/input/event";
-char devlist_path[PATHSIZE ] = "/proc/bus/input/devices";
+char xbox_devpath[PATHSIZE ] = "/dev/input/event"; //手柄设备地址
+char keyboard_devpath[PATHSIZE ] = "/dev/input/event"; //键盘设备地址
+char devlist_path[PATHSIZE ] = "/proc/bus/input/devices"; //设备列表信息地址
 
-char xbox_devpattern[] = "Microsoft XBox 360 Super Mouse";
-char keyboard_devpattern[]="keyboard";
-char eventpattern[] = "event";
+char xbox_devpattern[] = "Microsoft XBox 360 Super Mouse"; //关键词匹配 找到手柄设备地址
+char keyboard_devpattern[]="keyboard"; //关键词匹配 找到键盘设备地址
+char eventpattern[] = "event"; //事件匹配
 
 char eventidstr[10] ;
 
@@ -54,11 +54,11 @@ int letter_keyid_table[] = {KEY_A, KEY_B, KEY_C, KEY_D, KEY_E, KEY_F, KEY_G, KEY
 
 
 
-static inline void setkey(char a , int b)
+static inline void setkey(char a , int b)  //asic码 与 对应的按键事件进行映射
 {
     keyid_table[(a)] = (b);
 }
-void InitKeyidTable()
+void InitKeyidTable() //初始化 keyid_table 数组 实现  给定asic码 返回对应的按键事件编号 
 {
     int i;
     for (i = 0 ; i < 10; i++)
@@ -89,7 +89,7 @@ void InitKeyidTable()
 }
 void *TheadingWheelFunc( void *arg);
 
-int kmp(char *A, char *B, int *next)
+int kmp(char *A, char *B, int *next) //kmp算法
 {
     int j = -1, ret = 0 , i;
     for ( i = 0; A[i]; i++)
@@ -105,7 +105,7 @@ int kmp(char *A, char *B, int *next)
     return -1;
 }
 
-void prekmp(char *B, int *next)
+void prekmp(char *B, int *next) //初始化next数组 （算法相关）
 {
     int i, j;
     next[0] = -1;
@@ -119,7 +119,7 @@ void prekmp(char *B, int *next)
     }
 }
 
-void GetEventIdStr(char *text , char *ret)
+void GetEventIdStr(char *text , char *ret) //得到具体设备的eventid 返回str类型
 {
     int i;
     for (i = 0 ; text[i] != ' ' && text[i] != '\0' && text[i] != '\n'; i++)
@@ -129,7 +129,7 @@ void GetEventIdStr(char *text , char *ret)
     ret[i] = 0;
 }
 
-void AddEventIdStrtoPath(char *primdevpath, char *eventidstr)
+void AddEventIdStrtoPath(char *primdevpath, char *eventidstr) //设备路径后面添加对应的event编号 
 {
     int len = strlen(primdevpath), i;
     for (i = 0 ; eventidstr[i]; i++)
@@ -151,7 +151,7 @@ void CompleteXboxDevPath(char *devlistbuffer, char *xbox_devpath)
     AddEventIdStrtoPath(xbox_devpath, eventidstr);
     //printf("%s\n", xbox_devpath);
 } */
-void CompleteDevPath(char *devlistbuffer,char *raw_devpath,char *devpattern){
+void CompleteDevPath(char *devlistbuffer,char *raw_devpath,char *devpattern){ //完善设备路径
      int st, i;
     memset(eventidstr , 0 , sizeof(eventidstr));
     prekmp(devpattern, next);
@@ -162,17 +162,17 @@ void CompleteDevPath(char *devlistbuffer,char *raw_devpath,char *devpattern){
     AddEventIdStrtoPath(raw_devpath, eventidstr);
 }
 
-int CheckEnd()
+int CheckEnd() //检测 是否按了 微软logo键 按了则退出程序
 {
     return (btn_state[EV_KEY][BTN_MODE] == 1);
 }
 
-static inline int CheckReport(struct  input_event *curevent)
+static inline int CheckReport(struct  input_event *curevent) //检测事件类型是否是report类
 {
     return curevent->type == 0 && curevent->code == 0 && curevent->value == 0;
 }
 
-void SendReport(int fp, struct timeval rtime)
+void SendReport(int fp, struct timeval rtime) //根据设备指针 和 时间 发送 report类事件
 {
     struct  input_event report_event;
     memset(&report_event, 0, sizeof(report_event));
@@ -183,17 +183,17 @@ void SendReport(int fp, struct timeval rtime)
     write(fp, &report_event, sizeof(report_event));
 }
 
-int CheckBtnState(int i , int j)
+int CheckBtnState(int i , int j) //检测对应事件类型，对应事件编号的按键状态
 {
     return btn_state[i][j];
 }
-static inline int CheckEvent(struct input_event *curevent , int type , int code )
+static inline int CheckEvent(struct input_event *curevent , int type , int code )//见车事件类型 编号 是否与 所给的事件一致
 {
     return curevent->type == type && curevent->code == code ;
 }
 
 
-struct timeval SendEvent(struct input_event *curevent, int type, int code, int value, int fp)
+struct timeval SendEvent(struct input_event *curevent, int type, int code, int value, int fp) //给定事件 类型 编号 数值 设备指针 发送事件
 {
     memset(curevent, 0, sizeof(curevent));
     gettimeofday(&curevent->time, NULL);
@@ -205,7 +205,7 @@ struct timeval SendEvent(struct input_event *curevent, int type, int code, int v
 }
 
 
-void SendKeyfromChar(char x, int fp)
+void SendKeyfromChar(char x, int fp) //根据ascii码 发送对应的键盘事件编号
 {
     struct input_event curevent;
     int keyid = keyid_table[x];
@@ -217,7 +217,7 @@ void SendKeyfromChar(char x, int fp)
     SendReport(fp,rtime);
 }
 
-void SendComboKeys3(int key1, int key2, int key3, int fp)
+void SendComboKeys3(int key1, int key2, int key3, int fp) //发送组合键 key1+key2+key3
 {
     struct input_event curevent;
     struct timeval rtime;
@@ -267,6 +267,7 @@ void SendComboKeys2(int key1, int key2, int fp)
     usleep(500);
 
 }
+//终端 sublime编辑器  火狐浏览器 chrom浏览器  文件管理器
 char window_name[MAXWINDOWNUM][50] =
 {
     "gnome-terminal",
@@ -333,14 +334,14 @@ int ComboKey_XBtnType[MAXPROBLEKEYNUM][2] =
     {EV_KEY,BTN_SELECT},
     {EV_KEY,BTN_START}
 };
-void CheckandSendfromWindowId(int wid, int fp)
+void CheckandSendfromWindowId(int wid, int fp) //根据窗口id 和当前的输入情况 发送按键事件
 {
     int i;
     for ( i = 0; i < MAXPROBLEKEYNUM; i++)
     {
         if (CheckBtnState(ComboKey_XBtnType[i][0], ComboKey_XBtnType[i][1]))
         {
-            printf("%d\n",i);
+            //printf("%d\n",i);
             if (ComboKey_Table[wid][i][0] == 2)
             {
                 SendComboKeys2(ComboKey_Table[wid][i][1], ComboKey_Table[wid][i][2], fp);
@@ -354,7 +355,7 @@ void CheckandSendfromWindowId(int wid, int fp)
     }
 }
 
-void PerformCoolKeyAcrdWindow(int fp)
+void PerformCoolKeyAcrdWindow(int fp) //检测串口id 并改变按键策略
 {
     int i, curId = -1;
     for (i = 0; i < MAXWINDOWNUM; i++)
@@ -368,12 +369,9 @@ void PerformCoolKeyAcrdWindow(int fp)
         }
     }
 }
-void SwitchFixKit()
-{
 
-}
 
-void *TheadingReadandProsKeyfromXboxFunc( void *arg)
+void *TheadingReadandProsKeyfromXboxFunc( void *arg) //循环检测手柄按键输入 分析事件 并进行下一步
 {
     int end_fg = 0, i, creatWheelThread_fg = 0, pressedDLeftandRight_fg = 0;
     struct  input_event switchwevent;
@@ -382,7 +380,7 @@ void *TheadingReadandProsKeyfromXboxFunc( void *arg)
     while (1)
     {
         //printf("yeh4!!!\n");
-        usleep(1);
+        usleep(1); //让出cpu给其他县城
         read(fpxbox, &tmpevent, sizeof(tmpevent));
         if (end_fg && CheckReport(&tmpevent)) return NULL;
 
@@ -392,18 +390,18 @@ void *TheadingReadandProsKeyfromXboxFunc( void *arg)
         //{
         //if (SendReport(end_fg)) return NULL;
         // }
-        /*
+         /*
         if (CheckBtnState(EV_KEY, BTN_SELECT))
         {
-            puts("btn_back");
-            puts(btnback_macrostr);
+            //puts("btn_back");
+            //puts(btnback_macrostr);
             for (i = 0; btnback_macrostr[i]; i++) SendKeyfromChar(btnback_macrostr[i], fpxbox);
             btn_state[EV_KEY][BTN_SELECT] = 0;
         }
         else if (CheckBtnState(EV_KEY, BTN_START))
         {
-            puts("btn_start");
-            puts(btnstart_macrostr);
+            //puts("btn_start");
+            //puts(btnstart_macrostr);
             for (i = 0; btnstart_macrostr[i]; i++) SendKeyfromChar(btnstart_macrostr[i], fpxbox);
             btn_state[EV_KEY][BTN_START] = 0;
         }
@@ -498,24 +496,21 @@ void *TheadingReadandProsKeyfromXboxFunc( void *arg)
             pressedDLeftandRight_fg = 0;
         }
         end_fg = CheckEnd();
-        printf("fpxbox:%d type: %d code:%d value:%d\n", fpxbox, tmpevent.type, tmpevent.code, tmpevent.value);
+        //printf("fpxbox:%d type: %d code:%d value:%d\n", fpxbox, tmpevent.type, tmpevent.code, tmpevent.value);
         //usleep(10000);
     }
     return NULL;
 }
 
-void *TheadingCoolKeyAccordingWindowFunc(void *arg)
-{
 
-}
 
-void *TheadingReadCmdFunc(void *arg)
+void *TheadingReadCmdFunc(void *arg) 
 {
     char cmd[50], str_a[50], str_b[MAXMACROSTRLEN];
     int fail_fg = 0;
-    //puts("command format:");
-    //printf("set btnback [string]\t\t type [string] when btnback pressed\n");
-    //printf("set btnstart [string]\t\t type [string] when btnstart pressed\n");
+    puts("command format:");
+    printf("set btnback [string]\t\t type [string] when btnback pressed\n");
+    printf("set btnstart [string]\t\t type [string] when btnstart pressed\n");
     while (scanf(" %s", cmd) == 1)
     {
         fail_fg = 1;
@@ -587,11 +582,11 @@ int main()
     fpkeyboard = open(keyboard_devpath,O_RDWR);
     //pthread_create(&threadingwheel, NULL, TheadingWheelFunc, "Processing Wheel ");
 
-    pthread_create(&theadingreadcmd, NULL, TheadingReadCmdFunc, "Processing Read from Console...");
+    //pthread_create(&theadingreadcmd, NULL, TheadingReadCmdFunc, "Processing Read from Console...");
 
     pthread_create(&theadingcheckwindow, NULL, TheadingCheckWindowFunc, "Processing Check Window...");
 
-    pthread_create(&theadingcoolkeyaccordingwindow, NULL, TheadingCoolKeyAccordingWindowFunc, "Processing CoolKey Accoring Window...");
+
 
     /*if (){
         pthread_cancel(pthx);
@@ -602,14 +597,12 @@ int main()
     //    END
     pthread_join(theadingreadfromxbox, NULL);
 
-    pthread_cancel(theadingreadcmd);
-    pthread_join(theadingreadcmd, NULL);
+    //pthread_cancel(theadingreadcmd);
+    //pthread_join(theadingreadcmd, NULL);
 
     pthread_cancel(theadingcheckwindow);
     pthread_join(theadingcheckwindow, NULL);
 
-    pthread_cancel(theadingcoolkeyaccordingwindow);
-    pthread_join(theadingcoolkeyaccordingwindow, NULL);
 
     close(fpxbox);
     close(fpdevlist);
